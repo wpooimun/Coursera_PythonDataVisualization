@@ -25,15 +25,16 @@ def read_csv_as_nested_dict(filename, keyfield, separator, quote):
       field values for that row.
     """
     dct_of_dct = dict()
-    with open(filename, newline='') as f:
-        reader = csv.DictReader(f, delimiter=separator, quotechar=quote)
+    # Perform action when file is opened
+    with open(filename, newline='') as csvfile:
+        reader = csv.DictReader(csvfile, delimiter=separator, quotechar=quote)
         for row in reader:
             key = row[keyfield]
             dct_of_dct[key] = row
     return dct_of_dct
 
 
-def build_plot_values(gdpinfo, gdpdata):
+def build_plot_values(gdpinfo1, gdpdata):
     """
     Inputs:
       gdpinfo - GDP data information dictionary
@@ -49,18 +50,20 @@ def build_plot_values(gdpinfo, gdpdata):
       be a float.
     """
     lst_of_tup = list()
-    for k, v in gdpdata.items():
+    for key, val in gdpdata.items():
+        # Error will appear if k cannot be converted to int or v cannot be converted to float
         try:
-            k = int(k)
-            if v != "":
-                tup = (k, float(v))
-                lst_of_tup.append(tup)
-        except ValueError:  # error if k cannot be converted to int or v cannot be converted to float
+            key = int(key)
+            if gdpinfo1["min_year"] <= key <= gdpinfo1["max_year"]:
+                if val != "":
+                    tup = (key, float(val))
+                    lst_of_tup.append(tup)
+        except ValueError:
             continue
     return lst_of_tup
 
 
-def build_plot_dict(gdpinfo, country_list):
+def build_plot_dict(gdpinfo1, country_list):
     """
     Inputs:
       gdpinfo      - GDP data information dictionary
@@ -76,14 +79,17 @@ def build_plot_dict(gdpinfo, country_list):
       with an empty XY plot value list.
     """
     dct_of_tup = dict()
-    csv_dct = read_csv_as_nested_dict(gdpinfo["gdpfile"], gdpinfo["country_name"], gdpinfo["separator"],
-                                         gdpinfo["quote"])
+    csv_dct = read_csv_as_nested_dict(gdpinfo1["gdpfile"], gdpinfo1["country_name"], gdpinfo1["separator"],
+                                         gdpinfo1["quote"])
     for country in country_list:
-        # check if country is in the dictionary before action
+        # Check if country is in the dictionary before action
         gdpdata = csv_dct.get(country, None)
-        if gdpdata is not None:     # country is in the dict
-            plot_values = build_plot_values(gdpinfo, gdpdata)
+        if gdpdata is not None:
+            plot_values = build_plot_values(gdpinfo1, gdpdata)
+            plot_values.sort(key=lambda x: x[0])
             dct_of_tup[country] = plot_values
+        else:
+            dct_of_tup[country] = list()
     return dct_of_tup
 
 
@@ -105,11 +111,11 @@ def render_xy_plot(gdpinfo, country_list, plot_file):
     plot_data = build_plot_dict(gdpinfo, country_list)
     chart = pygal.XY()
     chart.title = "GDP data"
+    # Add plot of country iteratively
     for country in country_list:
         print(plot_data[country])
         chart.add(country, plot_data[country])
     chart.render_to_file(plot_file)
-    return
 
 
 def test_render_xy_plot():
@@ -136,4 +142,4 @@ def test_render_xy_plot():
 # Make sure the following call to test_render_xy_plot is commented out
 # when submitting to OwlTest/CourseraTest.
 
-test_render_xy_plot()
+# test_render_xy_plot()

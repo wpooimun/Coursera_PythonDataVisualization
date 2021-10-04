@@ -45,6 +45,8 @@ class TestProjectIspPlot(unittest.TestCase):
                 self.assertIsInstance(item, tuple)
                 # print(item)
                 self.assertIsInstance(item[0], int)
+                self.assertGreaterEqual(item[0], gdpinfo["min_year"])
+                self.assertLessEqual(item[0], gdpinfo["max_year"])
                 self.assertIsInstance(item[1], float)
 
     def test_render_xy_plot(self):
