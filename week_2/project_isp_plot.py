@@ -48,7 +48,16 @@ def build_plot_values(gdpinfo, gdpdata):
       exist in gdpdata.  The year will be an integer and the GDP will
       be a float.
     """
-    return []
+    lst_of_tup = list()
+    for k, v in gdpdata.items():
+        try:
+            k = int(k)
+            if v != "":
+                tup = (k, float(v))
+                lst_of_tup.append(tup)
+        except ValueError:  # error if k cannot be converted to int or v cannot be converted to float
+            continue
+    return lst_of_tup
 
 
 def build_plot_dict(gdpinfo, country_list):
@@ -66,7 +75,16 @@ def build_plot_dict(gdpinfo, country_list):
       CSV file should still be in the output dictionary, but
       with an empty XY plot value list.
     """
-    return {}
+    dct_of_tup = dict()
+    csv_dct = read_csv_as_nested_dict(gdpinfo["gdpfile"], gdpinfo["country_name"], gdpinfo["separator"],
+                                         gdpinfo["quote"])
+    for country in country_list:
+        # check if country is in the dictionary before action
+        gdpdata = csv_dct.get(country, None)
+        if gdpdata is not None:     # country is in the dict
+            plot_values = build_plot_values(gdpinfo, gdpdata)
+            dct_of_tup[country] = plot_values
+    return dct_of_tup
 
 
 def render_xy_plot(gdpinfo, country_list, plot_file):
@@ -84,6 +102,13 @@ def render_xy_plot(gdpinfo, country_list, plot_file):
       specified by gdpinfo for the countries in country_list.
       The image will be stored in a file named by plot_file.
     """
+    plot_data = build_plot_dict(gdpinfo, country_list)
+    chart = pygal.XY()
+    chart.title = "GDP data"
+    for country in country_list:
+        print(plot_data[country])
+        chart.add(country, plot_data[country])
+    chart.render_to_file(plot_file)
     return
 
 
@@ -111,4 +136,4 @@ def test_render_xy_plot():
 # Make sure the following call to test_render_xy_plot is commented out
 # when submitting to OwlTest/CourseraTest.
 
-# test_render_xy_plot()
+test_render_xy_plot()
