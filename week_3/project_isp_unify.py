@@ -84,11 +84,11 @@ def build_map_dict_by_name(gdpinfo, plot_countries, year):
     code_gdp_dict = dict()
     null_set = set()
     for country_code, country_name in code_name_dict.items():
-        gdp = gdp_countries[country_name][str(year)]
+        gdp = gdp_countries[country_name][year]
         if gdp == "":
-            null_set.add(country_name)
+            null_set.add(country_code)
         else:
-            code_gdp_dict[country_code] = gdp
+            code_gdp_dict[country_code] = math.log10(float(gdp))
     return code_gdp_dict, missing_set, null_set
 
 
@@ -108,7 +108,27 @@ def render_world_map(gdpinfo, plot_countries, year, map_file):
       Creates a world map plot of the GDP data for the given year and
       writes it to a file named by map_file.
     """
-    return
+    code_gdp_dict, missing_set, null_set = build_map_dict_by_name(gdpinfo, plot_countries, year)
+    chart = pygal.maps.world.World()
+    chart.title = f"GDP (log scale) in year {year}"
+    # Filter countries according to gdp range
+    max_min_trillion_dict = {
+        "< 0.21": (0, 0.21),
+        "0.21 - 0.75": (0.21, 0.75),
+        "0.75 - 1.89":  (0.75, 1.89),
+        "1.89 - 3.81": (1.89, 3.81),
+        "> 3.81": (3.81, 10)
+    }
+    for label, minmaxrange in max_min_trillion_dict.items():
+        temp_list = [
+            country
+            for country, gdp in code_gdp_dict.items()
+            if minmaxrange[0] * 1e12 <= gdp < minmaxrange[1] * 1e12
+        ]
+        chart.add(label, temp_list)
+    chart.add("Missing country from World Bank Data", missing_set)
+    chart.add("Empty GDP from World Bank Data", null_set)
+    chart.render_to_file(map_file)
 
 
 def test_render_world_map():

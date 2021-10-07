@@ -32,6 +32,6 @@ class TestProjectIspPlot(unittest.TestCase):
         self.assertEqual(len(missing_set), 30)
 
     def test_build_map_dict_by_name(self):
-        year = 1961
+        year = '1961'
         code_gdp_dict, missing_set, null_set = target.build_map_dict_by_name(gdpinfo, pygal_countries, year)
         self.assertEqual(len(code_gdp_dict) + len(null_set), 154)
